@@ -23,19 +23,6 @@
       <scope>compile</scope>
     </dependency>
     <dependency>
-      <groupId>third_party</groupId>
-      <artifactId>hadoop-scidata</artifactId>
-      <version>1.0</version>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>third_party</groupId>
-      <artifactId>netcdfAll</artifactId>
-      <version>4.2</version>
-      <scope>compile</scope>
-    </dependency>
-
-    <dependency>
       <groupId>org.apache.mahout</groupId>
       <artifactId>mahout-core</artifactId>
       <version>0.7</version>
