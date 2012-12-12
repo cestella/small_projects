@@ -3,3 +3,6 @@
 .project
 target
 scratch
+*.swp
+.*.swp
+.settings
