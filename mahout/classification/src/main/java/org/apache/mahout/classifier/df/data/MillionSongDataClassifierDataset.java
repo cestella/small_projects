@@ -45,20 +45,20 @@ public class MillionSongDataClassifierDataset extends Dataset {
 		}
 		for(int i = 0;i < 90;++i)
 		{
-			ret[i + 1] = Collections.emptyList();
+			ret[i + 1] = new ArrayList<String>();
 		}
 		return ret;
 	}
 	
 	public static void persistIfDoesNotExist(Path datasetPath, FileSystem fs, Dataset dataset) throws IOException
 	{
-		if(fs.exists(datasetPath) && fs.isFile(datasetPath))
+		if(!fs.exists(datasetPath))
 		{
-			fs.delete(datasetPath, false);
+			FSDataOutputStream oStream = fs.create(datasetPath);
+			dataset.write(oStream);
+			oStream.flush();
+			oStream.close();
 		}
-		FSDataOutputStream oStream = fs.create(datasetPath);
-		dataset.write(oStream);
-		oStream.flush();
-		oStream.close();
+		
 	}
 }

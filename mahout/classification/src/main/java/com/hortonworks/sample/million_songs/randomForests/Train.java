@@ -1,6 +1,7 @@
 package com.hortonworks.sample.million_songs.randomForests;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 import org.apache.commons.cli2.CommandLine;
 import org.apache.commons.cli2.Group;
@@ -11,7 +12,6 @@ import org.apache.commons.cli2.builder.DefaultOptionBuilder;
 import org.apache.commons.cli2.builder.GroupBuilder;
 import org.apache.commons.cli2.commandline.Parser;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -24,8 +24,13 @@ import org.apache.mahout.classifier.df.data.DataLoader;
 import org.apache.mahout.classifier.df.data.Dataset;
 import org.apache.mahout.classifier.df.data.MillionSongDataClassifierDataset;
 import org.apache.mahout.classifier.df.mapreduce.Builder;
+import org.apache.mahout.classifier.df.mapreduce.MapredOutput;
 import org.apache.mahout.classifier.df.mapreduce.partial.PartialBuilder;
+import org.apache.mahout.classifier.df.mapreduce.partial.TreeID;
+import org.apache.mahout.classifier.df.node.Node;
 import org.apache.mahout.common.CommandLineUtil;
+import org.apache.mahout.common.Pair;
+import org.apache.mahout.common.iterator.sequencefile.SequenceFileIterable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.uncommons.maths.Maths;
@@ -40,6 +45,8 @@ public class Train
 									 , Path datasetPath
 									 , long seed
 									 , Configuration conf
+									 , FileSystem hdfs
+									 , boolean recover
 									 ) throws IOException, ClassNotFoundException, InterruptedException
 	{
 		DefaultTreeBuilder treeBuilder = new DefaultTreeBuilder();
@@ -52,15 +59,41 @@ public class Train
 											dataPath,
 											datasetPath,
 											seed, conf);
-		
-
-		log.info("Building the forest...");
-		long time = System.currentTimeMillis();
-
-		DecisionForest forest = forestBuilder.build(numTrees);
-
-		time = System.currentTimeMillis() - time;
-		log.info("Build Time: {}", DFUtils.elapsedTime(time));
+		DecisionForest forest = null;
+		if(!recover)
+		{
+			log.info("Building the forest...");
+			long time = System.currentTimeMillis();
+	
+			forest = forestBuilder.build(numTrees);
+			
+			time = System.currentTimeMillis() - time;
+			log.info("Build Time: {}", DFUtils.elapsedTime(time));
+		}
+		else
+		{
+			System.out.println("Recovering...");
+			Path outputPath = new Path("output");
+			Path[] outfiles = DFUtils.listOutputFiles(hdfs, outputPath);
+			//TreeID[] keys = new TreeID[numTrees];
+			Node[] trees = new Node[numTrees];
+		    // read all the outputs
+		    int index = 0;
+		    for (Path path : outfiles) {
+		      for (Pair<TreeID,MapredOutput> record : new SequenceFileIterable<TreeID, MapredOutput>(path, conf)) {
+		        TreeID key = record.getFirst();
+		        MapredOutput value = record.getSecond();
+//		        if (keys != null) {
+//		          keys[index] = key;
+//		        }
+		        if (trees != null) {
+		          trees[index] = value.getTree();
+		        }
+		        index++;
+		      }
+		    }
+		    forest = new DecisionForest(Arrays.asList(trees));
+		}
 		return forest;
 	}
 	
@@ -70,7 +103,9 @@ public class Train
 	 * @throws InterruptedException 
 	 * @throws ClassNotFoundException 
 	 */
-	public static void main(String[] argv) throws IOException, ClassNotFoundException, InterruptedException {
+	public static void main(String[] argv) throws IOException, ClassNotFoundException, InterruptedException 
+	{
+		
 		DefaultOptionBuilder obuilder = new DefaultOptionBuilder();
 	    ArgumentBuilder abuilder = new ArgumentBuilder();
 	    GroupBuilder gbuilder = new GroupBuilder();
@@ -140,13 +175,14 @@ public class Train
 	    	CommandLineUtil.printHelp(group);
 	    	System.exit(-1);
 	    }
-	    if (cmdLine.hasOption("help"))
+	    if (cmdLine.hasOption(helpOpt))
 	    {
 	        CommandLineUtil.printHelp(group);
 	        System.exit(-1);
 	    }
 	    DecisionForest forest = null;
 	    Configuration config = new Configuration();
+	    config.set("mapred.submit.replication", "3");
 	    FileSystem hdfs = FileSystem.get(config);
 	    Path modelLocation = new Path(cmdLine.getValue(modelOpt) + "/model.dat");
 	    Path datasetPath = new Path(cmdLine.getValue(modelOpt) + "/dataset.dat");
@@ -161,7 +197,7 @@ public class Train
 	    	//train...
 	    	int numTrees = Integer.parseInt((String)cmdLine.getValue(treeOpt));
 	    	int m = (int) Math.floor(Maths.log(2, dataset.nbAttributes()) + 1);
-	    	forest = trainForest(m, numTrees, trainingSetPath, datasetPath, 0, config);
+	    	forest = trainForest(m, numTrees, trainingSetPath, datasetPath, 0, config, hdfs, hdfs.exists(new Path("output")));
 	    	//persist
 	    	
 	    	if(hdfs.exists(modelLocation))
@@ -194,6 +230,8 @@ public class Train
 	    	//Evaluate on the testing set...
 	    	Path testingSetPath = new Path((String) cmdLine.getValue(testOpt));
 	    	Data testData = DataLoader.loadData(dataset, hdfs, testingSetPath);
+	    	System.out.println("Read " + testData.size() + " entries...");
+	    	System.out.println("Each data point has " + dataset.nbAttributes() + " attributes and " + dataset.nblabels() + " labels...");
 			double[] testLabels = testData.extractLabels();
 			double[] predictions = new double[testData.size()];
 			forest.classify(testData, predictions);
