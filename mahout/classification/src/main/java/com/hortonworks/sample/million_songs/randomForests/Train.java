@@ -18,7 +18,9 @@ import org.apache.hadoop.fs.Path;
 import org.apache.mahout.classifier.df.DFUtils;
 import org.apache.mahout.classifier.df.DecisionForest;
 import org.apache.mahout.classifier.df.ErrorEstimate;
+import org.apache.mahout.classifier.df.builder.DecisionTreeBuilder;
 import org.apache.mahout.classifier.df.builder.DefaultTreeBuilder;
+import org.apache.mahout.classifier.df.builder.TreeBuilder;
 import org.apache.mahout.classifier.df.data.Data;
 import org.apache.mahout.classifier.df.data.DataLoader;
 import org.apache.mahout.classifier.df.data.Dataset;
@@ -39,6 +41,33 @@ public class Train
 {
 	private static final Logger log = LoggerFactory
 			.getLogger(Train.class);
+	static double evaluateForest( DecisionForest forest
+						 		, Path testDataPath
+						 		, Dataset dataset
+						 		, FileSystem hdfs
+						 		) throws IOException
+	{
+		Data testData = DataLoader.loadData(dataset, hdfs, testDataPath);
+    	System.out.println("Read " + testData.size() + " entries...");
+    	System.out.println("Each data point has " + dataset.nbAttributes() + " attributes and " + dataset.nblabels() + " labels...");
+		double[] testLabels = testData.extractLabels();
+		double[] predictions = new double[testData.size()];
+		forest.classify(testData, predictions);
+		return ErrorEstimate.errorRate(testLabels, predictions);
+	}
+	static DecisionForest trainForest( int numTrees
+									 , Path dataPath
+									 , Path datasetPath
+									 , long seed
+									 , Configuration conf
+									 , FileSystem hdfs
+									 , boolean recover
+									 , Dataset dataset
+									 ) throws IOException, ClassNotFoundException, InterruptedException
+	{
+		int m = (int) Math.floor(Maths.log(2, dataset.nbAttributes()) + 1);
+		return trainForest(m, numTrees, dataPath, datasetPath, seed, conf, hdfs, recover);
+	}
 	static DecisionForest trainForest( int m
 									 , int numTrees
 									 , Path dataPath
@@ -49,9 +78,10 @@ public class Train
 									 , boolean recover
 									 ) throws IOException, ClassNotFoundException, InterruptedException
 	{
-		DefaultTreeBuilder treeBuilder = new DefaultTreeBuilder();
-		treeBuilder.setM(m);
-
+		
+		TreeBuilder treeBuilder = new DecisionTreeBuilder();//new DefaultTreeBuilder();
+		//treeBuilder.setM(m);
+		
 		Builder forestBuilder;
 
 		
@@ -229,14 +259,8 @@ public class Train
 	    {
 	    	//Evaluate on the testing set...
 	    	Path testingSetPath = new Path((String) cmdLine.getValue(testOpt));
-	    	Data testData = DataLoader.loadData(dataset, hdfs, testingSetPath);
-	    	System.out.println("Read " + testData.size() + " entries...");
-	    	System.out.println("Each data point has " + dataset.nbAttributes() + " attributes and " + dataset.nblabels() + " labels...");
-			double[] testLabels = testData.extractLabels();
-			double[] predictions = new double[testData.size()];
-			forest.classify(testData, predictions);
-			ErrorEstimate.errorRate(testLabels, predictions);
-			System.out.println("Computing error rate: " + ErrorEstimate.errorRate(testLabels, predictions));
+	    	double errorRate = evaluateForest(forest, testingSetPath, dataset, hdfs);
+			System.out.println("Computing error rate: " + errorRate);
 	    }
 	    
 	}

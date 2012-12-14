@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import junit.framework.Assert;
 import junit.framework.TestCase;
 
 import org.apache.hadoop.conf.Configuration;
@@ -233,8 +234,9 @@ public class RandomForestTest extends TestCase {
 			double[] testLabels = testData.extractLabels();
 			double[] predictions = new double[testData.size()];
 			f.classify(testData, predictions);
-			ErrorEstimate.errorRate(testLabels, predictions);
-			System.out.println("Computing error rate: " + ErrorEstimate.errorRate(testLabels, predictions));
+			double errorRate = ErrorEstimate.errorRate(testLabels, predictions);
+			System.out.println("Computing error rate: " + errorRate);
+			Assert.assertTrue(errorRate < .1);
 		}
 	}
 }
