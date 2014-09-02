@@ -2,12 +2,15 @@ package org.apache.mahout.classifier.df.data;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+
+import com.google.common.base.Function;
 
 public class MillionSongDataClassifierDataset extends Dataset {
 
@@ -20,6 +23,14 @@ public class MillionSongDataClassifierDataset extends Dataset {
 			 );
 	}
 		
+	public static Function<String, String> CATEGORY_CONVERTER = new Function<String, String>()
+			{
+				@Override
+				public String apply(String input) {
+					int year = Integer.parseInt(input);
+					return 10*Math.round( (year - 1900) / 10) + "";
+				}
+			};
 	/**
 	 * 90 numerical attributes and 1 label
 	 * @return
@@ -39,10 +50,12 @@ public class MillionSongDataClassifierDataset extends Dataset {
 	{
 		List<String>[] ret = new ArrayList[91];
 		ret[0] = new ArrayList<String>();
+		Set<String> categories = new HashSet<String>();
 		for(int i = 1922;i <= 2011;++i)
 		{
-			ret[0].add("" + i);
+			categories.add(CATEGORY_CONVERTER.apply("" + i));
 		}
+		ret[0] = new ArrayList<String>(categories);
 		for(int i = 0;i < 90;++i)
 		{
 			ret[i + 1] = new ArrayList<String>();

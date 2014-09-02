@@ -8,6 +8,7 @@ import java.io.PrintWriter;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 
 import junit.framework.Assert;
 import junit.framework.TestCase;
@@ -15,6 +16,8 @@ import junit.framework.TestCase;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.mahout.classifier.ClassifierResult;
+import org.apache.mahout.classifier.ResultAnalyzer;
 import org.apache.mahout.classifier.df.DFUtils;
 import org.apache.mahout.classifier.df.DecisionForest;
 import org.apache.mahout.classifier.df.ErrorEstimate;
@@ -22,6 +25,7 @@ import org.apache.mahout.classifier.df.builder.DefaultTreeBuilder;
 import org.apache.mahout.classifier.df.data.Data;
 import org.apache.mahout.classifier.df.data.DataLoader;
 import org.apache.mahout.classifier.df.data.Dataset;
+import org.apache.mahout.classifier.df.data.Instance;
 import org.apache.mahout.classifier.df.data.IrisDataset;
 import org.apache.mahout.classifier.df.mapreduce.Builder;
 import org.apache.mahout.classifier.df.mapreduce.inmem.InMemBuilder;
@@ -182,32 +186,7 @@ public class RandomForestTest extends TestCase {
 		testingFileWriter.close();
 	}
 
-//	public double computeAccuracy(DecisionForest forest) throws IOException {
-//		List<String> data = Files.readLines(new File(TESTING_SET),
-//				Charsets.US_ASCII);
-//		int id = 0;
-//		int n = 0;
-//		int numWrong = 0;
-//		Random rng = new Random(0);
-//		for (String datum : data) {
-//			String[] tokens = datum.split(",");
-//			double[] features = new double[4];
-//			for (int i = 0; i < features.length; ++i) {
-//				features[i] = Double.valueOf(tokens[i]);
-//			}
-//			Vector featureVector = new DenseVector(features);
-//			//Instance inst = new Instance(++id, featureVector, -1);
-//			int labelIdx = forest.classify(rng, features);
-//			Assert.assertNotSame("Unable to classify", labelIdx, -1);
-//			String expectedLabel = tokens[4];
-//			String computedLabel = IrisDataset.Label.getLabelName(labelIdx);
-//			if (!expectedLabel.equals(computedLabel)) {
-//				numWrong++;
-//			}
-//			++n;
-//		}
-//		return 1.0 - (1.0 * numWrong) / (1.0 * n);
-//	}
+
 
 	public void testIrisDataset() throws Exception {
 		if(new File("output").exists())
@@ -218,8 +197,9 @@ public class RandomForestTest extends TestCase {
 		createDatasets(.8);
 		String datasetLocation = DATA_DIR + "/iris.dataset";
 		
-
+		
 		IrisDataset dataset = new IrisDataset(datasetLocation);
+		ResultAnalyzer analyzer = new ResultAnalyzer(IrisDataset.Label.getLabelNames(), "unknown");
 		dataset.persistIfDoesNotExist();
 		int m = (int) Math.floor(Maths.log(2, dataset.nbAttributes()) + 1);
 		int numTrees = 10;
@@ -228,15 +208,20 @@ public class RandomForestTest extends TestCase {
 		
 		// Data data = DataLoader.loadData(dataset, fs, rfConfig.getDataPath());
 		DecisionForest f = buildForest(dataset, conf, rfConfig);
-		{
-			FileSystem fs = rfConfig.getDataPath().getFileSystem(conf);
-			Data testData = DataLoader.loadData(dataset, fs, new Path(TESTING_SET));
-			double[] testLabels = testData.extractLabels();
-			double[] predictions = new double[testData.size()];
-			f.classify(testData, predictions);
-			double errorRate = ErrorEstimate.errorRate(testLabels, predictions);
-			System.out.println("Computing error rate: " + errorRate);
-			Assert.assertTrue(errorRate < .1);
+		
+		FileSystem fs = rfConfig.getDataPath().getFileSystem(conf);
+		Data testData = DataLoader.loadData(dataset, fs, new Path(TESTING_SET));
+		double[] testLabels = testData.extractLabels();
+		double[] predictions = new double[testData.size()];
+		f.classify(testData, predictions);
+
+		for (int i = 0; i < testData.size(); ++i) {
+			String correctLabel = dataset.getLabelString(testLabels[i]);
+			String predictedLabel = dataset.getLabelString(predictions[i]);
+			ClassifierResult result = new ClassifierResult(predictedLabel);
+			analyzer.addInstance(correctLabel, result);
 		}
+		System.out.println("Classification Results:\n" + analyzer);
+
 	}
 }

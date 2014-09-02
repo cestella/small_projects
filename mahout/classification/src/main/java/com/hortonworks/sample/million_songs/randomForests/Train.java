@@ -2,6 +2,7 @@ package com.hortonworks.sample.million_songs.randomForests;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Random;
 
 import org.apache.commons.cli2.CommandLine;
 import org.apache.commons.cli2.Group;
@@ -17,13 +18,11 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.mahout.classifier.df.DFUtils;
 import org.apache.mahout.classifier.df.DecisionForest;
-import org.apache.mahout.classifier.df.ErrorEstimate;
 import org.apache.mahout.classifier.df.builder.DecisionTreeBuilder;
-import org.apache.mahout.classifier.df.builder.DefaultTreeBuilder;
-import org.apache.mahout.classifier.df.builder.TreeBuilder;
 import org.apache.mahout.classifier.df.data.Data;
 import org.apache.mahout.classifier.df.data.DataLoader;
 import org.apache.mahout.classifier.df.data.Dataset;
+import org.apache.mahout.classifier.df.data.Instance;
 import org.apache.mahout.classifier.df.data.MillionSongDataClassifierDataset;
 import org.apache.mahout.classifier.df.mapreduce.Builder;
 import org.apache.mahout.classifier.df.mapreduce.MapredOutput;
@@ -41,7 +40,7 @@ public class Train
 {
 	private static final Logger log = LoggerFactory
 			.getLogger(Train.class);
-	static double evaluateForest( DecisionForest forest
+	static double[] evaluateForest( DecisionForest forest
 						 		, Path testDataPath
 						 		, Dataset dataset
 						 		, FileSystem hdfs
@@ -52,8 +51,41 @@ public class Train
     	System.out.println("Each data point has " + dataset.nbAttributes() + " attributes and " + dataset.nblabels() + " labels...");
 		double[] testLabels = testData.extractLabels();
 		double[] predictions = new double[testData.size()];
-		forest.classify(testData, predictions);
-		return ErrorEstimate.errorRate(testLabels, predictions);
+		Random r = new Random(0);
+		for(int i = 0;i < testData.size();++i)
+		{
+			Instance inst = testData.get(i);
+			predictions[i] = forest.classify(dataset, r, inst);
+		}
+		double errorRate[] = new double[4];
+		
+		for(int i = 0;i < predictions.length;++i)
+		{
+			int diff = (int)Math.abs(predictions[i] - testLabels[i]);
+			if(diff != 0)
+			{
+				errorRate[0] += 1;
+			}
+			if(diff > 3)
+			{
+				errorRate[1] += 1;
+			}
+			if(diff > 5)
+			{
+				errorRate[2] += 1;
+			}
+			if(diff > 10)
+			{
+				errorRate[3] += 1;
+			}
+			
+		}
+		for(int i = 0;i < errorRate.length;++i)
+		{
+			errorRate[i] /= predictions.length;
+		}
+		//forest.classify(testData, predictions);
+		return errorRate;
 	}
 	static DecisionForest trainForest( int numTrees
 									 , Path dataPath
@@ -65,7 +97,8 @@ public class Train
 									 , Dataset dataset
 									 ) throws IOException, ClassNotFoundException, InterruptedException
 	{
-		int m = (int) Math.floor(Maths.log(2, dataset.nbAttributes()) + 1);
+		int m = 25;//(int) Math.floor(Maths.log(2, dataset.nbAttributes()) + 1);
+		System.out.println("Computing m = " + m);
 		return trainForest(m, numTrees, dataPath, datasetPath, seed, conf, hdfs, recover);
 	}
 	static DecisionForest trainForest( int m
@@ -79,8 +112,9 @@ public class Train
 									 ) throws IOException, ClassNotFoundException, InterruptedException
 	{
 		
-		TreeBuilder treeBuilder = new DecisionTreeBuilder();//new DefaultTreeBuilder();
-		//treeBuilder.setM(m);
+		//DefaultTreeBuilder treeBuilder = new DefaultTreeBuilder();
+		DecisionTreeBuilder treeBuilder = new DecisionTreeBuilder();
+		treeBuilder.setM(m);
 		
 		Builder forestBuilder;
 
@@ -259,8 +293,9 @@ public class Train
 	    {
 	    	//Evaluate on the testing set...
 	    	Path testingSetPath = new Path((String) cmdLine.getValue(testOpt));
-	    	double errorRate = evaluateForest(forest, testingSetPath, dataset, hdfs);
-			System.out.println("Computing error rate: " + errorRate);
+	    	double[] errorRate = evaluateForest(forest, testingSetPath, dataset, hdfs);
+	    	System.out.println("Raw error rate: " + errorRate[0]);
+	    	
 	    }
 	    
 	}
