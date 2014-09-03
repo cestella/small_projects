@@ -1,7 +1,11 @@
 #Introduction
 
 This is a simple demonstration of how to use Tika to extract text
-and metadata from binary files using Pig. This is done via a UDF. 
+and metadata from binary files using Pig. This is done via a UDF.  Tika
+is a library for generalized extraction of text from many different file
+formats (i.e. PDF, doc, xls, etc.)  It wraps many different open source
+libraries to do its work.  The intent is to extract content as well as
+metadata about any file that you throw at it that is able to be parsed.
 
 Also, in order to read files
 from HDFS, a WholeFileLoader is created, which takes a directory and
@@ -19,8 +23,11 @@ Building requires maven, but is self contained.  Requires only:
 	
 	mvn clean package
 
-This will create a tarball in the target directory called textProcessing-1.0-SNAPSHOT-archive.tar.gz
-
+This will create a tarball in the target directory called
+textProcessing-1.0-SNAPSHOT-archive.tar.gz.  This tarball will contain
+all of the necessary dependencies in a single jar.  Extract it and it
+will contain the jar file with the UDF and Loader as well as their
+dependencies.
 
 #Usage
 
