@@ -14,7 +14,7 @@
     <fileSet>
       <directory>${project.basedir}/target</directory>
       <includes>
-        <include>textProcessing-1.0-SNAPSHOT.jar</include>
+        <include>textProcessing-1.0-SNAPSHOT-shaded.jar</include>
       </includes>
       <outputDirectory>/</outputDirectory>
       <useDefaultExcludes>true</useDefaultExcludes>

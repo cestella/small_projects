@@ -55,7 +55,7 @@ public class WholeFileLoader extends LoadFunc implements LoadMetadata, LoadPushD
             BytesWritable value = reader.getCurrentValue();
             t = TupleFactory.getInstance().newTuple(2);
             t.set(0, key.toString());
-            t.set(1, new DataByteArray(value.getBytes()));
+            t.set(1, new DataByteArray(value.copyBytes()));
         }
         catch (InterruptedException e) {
             throw new IOException("Unable to read next value", e);
