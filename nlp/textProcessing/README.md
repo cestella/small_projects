@@ -16,6 +16,7 @@ directory's file contents along with metadata.
 #Building
 
 Building requires maven, but is self contained.  Requires only:
+	
 	mvn clean package
 
 This will create a tarball in the target directory called textProcessing-1.0-SNAPSHOT-archive.tar.gz
@@ -26,6 +27,7 @@ This will create a tarball in the target directory called textProcessing-1.0-SNA
 Usage is as follows, where the assumptions are that you are on a unix
 machine and you have a directory in HDFS called input_dir with files in
 it and wish to extract those files into output_dir, a directory on HDFS:
+	
 	tar xzvf textProcessing-1.0-SNAPSHOT-archive.tar.gz
 	pig -param input=input_dir -param output=output_dir pig/dump.pig
 
