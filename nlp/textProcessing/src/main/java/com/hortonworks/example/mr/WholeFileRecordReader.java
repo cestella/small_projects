@@ -17,6 +17,10 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
 
+/**
+ * This is pretty much just from Tom White's book.  I needed it so I could wrap it in a
+ * Pig Loader.
+ */
 class WholeFileRecordReader extends RecordReader<Text, BytesWritable> {
 
     private FileSplit fileSplit;

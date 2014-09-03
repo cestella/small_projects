@@ -15,6 +15,10 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 
+/**
+ * This is pretty much just from Tom White's book.  I needed it so I could wrap it in a
+ * Pig Loader.
+ */
 public class WholeFileInputFormat extends FileInputFormat<Text, BytesWritable> {
 
     @Override

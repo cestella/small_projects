@@ -38,6 +38,7 @@ public class TikaExtractor extends EvalFunc<Tuple> {
         Parser parser = new AutoDetectParser();
         Metadata metadata = new Metadata();
         ByteArrayInputStream bis = new ByteArrayInputStream(((DataByteArray)objects.get(1)).get());
+        //set the content type directly as tika has a bear of a time
         metadata.set(Metadata.CONTENT_TYPE, new Tika().detect((String)objects.get(0)));
         StringWriter writer = new StringWriter();
         try {
