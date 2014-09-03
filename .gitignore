@@ -11,3 +11,7 @@ dependency-reduced-pom.xml
 .swo
 *.swo
 meta
+*.iml
+*.ipr
+*.iws
+.DS_Store
