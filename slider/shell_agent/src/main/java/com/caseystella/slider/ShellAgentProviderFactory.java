@@ -8,20 +8,20 @@ import org.apache.slider.providers.SliderProviderFactory;
 /**
  * Created by cstella on 9/10/14.
  */
-public class ParallelRProviderFactory extends SliderProviderFactory {
-    ParallelRProviderFactory()
+public class ShellAgentProviderFactory extends SliderProviderFactory {
+    ShellAgentProviderFactory()
     {}
-    ParallelRProviderFactory(Configuration conf)
+    ShellAgentProviderFactory(Configuration conf)
     {
         super(conf);
     }
     @Override
     public AbstractClientProvider createClientProvider() {
-        return null;
+        return new ShellAgentClientProvider(getConf());
     }
 
     @Override
     public ProviderService createServerProvider() {
-        return null;
+        return new ShellAgentProviderService();
     }
 }

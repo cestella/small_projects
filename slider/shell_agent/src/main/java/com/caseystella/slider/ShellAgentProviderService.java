@@ -29,18 +29,18 @@ import java.util.Map;
 /**
  * Created by cstella on 9/10/14.
  */
-public class ParallelRProviderService extends AbstractProviderService
+public class ShellAgentProviderService extends AbstractProviderService
                                       implements ProviderCore
                                                , SliderKeys
                                                , AgentRestOperations
                                                , Keys
 {
     protected static final Logger log =
-            LoggerFactory.getLogger(ParallelRProviderService.class);
+            LoggerFactory.getLogger(ShellAgentProviderService.class);
     private static final ProviderUtils providerUtils = new ProviderUtils(log);
 
-    public ParallelRProviderService() {
-        super("ParallelRProviderService");
+    public ShellAgentProviderService() {
+        super("ShellAgentProviderService");
         setAgentRestOperations(this);
     }
 

@@ -16,9 +16,9 @@ import java.util.Set;
 /**
  * Created by cstella on 9/10/14.
  */
-public class ParallelRClientProvider extends AbstractClientProvider implements SliderKeys {
+public class ShellAgentClientProvider extends AbstractClientProvider implements SliderKeys {
     protected static final String NAME = "parallel_r";
-    public ParallelRClientProvider(Configuration conf) {
+    public ShellAgentClientProvider(Configuration conf) {
         super(conf);
     }
 
