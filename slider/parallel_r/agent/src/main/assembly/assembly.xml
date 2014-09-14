@@ -6,23 +6,17 @@
   <includeBaseDirectory>false</includeBaseDirectory>
   <fileSets>
     <fileSet>
-      <directory>${project.basedir}/src/main/python</directory>
-      <outputDirectory>/</outputDirectory>
-      <useDefaultExcludes>true</useDefaultExcludes>
-    </fileSet>
-    <fileSet>
-      <directory>${project.basedir}/src/main/config</directory>
+      <directory>${project.basedir}/src/main/slider_agent</directory>
       <outputDirectory>/</outputDirectory>
       <useDefaultExcludes>true</useDefaultExcludes>
     </fileSet>
 
-
     <fileSet>
-      <directory>${project.basedir}/target</directory>
+      <directory>${project.basedir}/../runner/target</directory>
       <includes>
-        <include>shell_agent-1.0-SNAPSHOT-shaded.jar</include>
+        <include>runner-${project.version}-archive.tar</include>
       </includes>
-      <outputDirectory>/</outputDirectory>
+      <outputDirectory>/package/files</outputDirectory>
       <useDefaultExcludes>true</useDefaultExcludes>
     </fileSet>
   </fileSets>

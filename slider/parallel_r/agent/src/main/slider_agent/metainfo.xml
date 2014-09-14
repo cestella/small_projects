@@ -1,0 +1,39 @@
+<metainfo>
+  <schemaVersion>2.0</schemaVersion>
+  <application>
+    <name>PARALLELR</name>
+    <comment>Memcache is a network accessible key/value storage system, often used as a distributed cache.</comment>
+    <version>1.0.0</version>
+    <exportedConfigs>None</exportedConfigs>
+
+    <components>
+      <component>
+        <name>PARALLELR</name>
+        <category>MASTER</category>
+        <componentExports>
+          <componentExport>
+            <name>host_port</name>
+            <value>${THIS_HOST}:${site.global.listen_port}</value>
+          </componentExport>
+        </componentExports>
+        <commandScript>
+          <script>scripts/parallelr.py</script>
+          <scriptType>PYTHON</scriptType>
+        </commandScript>
+      </component>
+    </components>
+
+    <osSpecifics>
+      <osSpecific>
+        <osType>any</osType>
+        <packages>
+          <package>
+            <type>tarball</type>
+            <name>files/jmemcached-1.0.0.tar</name>
+          </package>
+        </packages>
+      </osSpecific>
+    </osSpecifics>
+
+  </application>
+</metainfo>

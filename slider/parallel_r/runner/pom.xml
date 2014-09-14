@@ -2,39 +2,50 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>com.caseystella.slider</groupId>
-  <artifactId>shell_agent</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <groupId>com.hortonworks.datascience</groupId>
+  <artifactId>runner</artifactId>
+  <version>1.0.0</version>
   <packaging>jar</packaging>
 
-  <name>shell_agent</name>
+  <name>slider runner</name>
   <url>http://maven.apache.org</url>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <slider.version>0.30</slider.version>
   </properties>
   <dependencies>
-    <dependency>
-      <groupId>org.apache.slider</groupId>
-      <artifactId>slider-core</artifactId>
-      <version>${slider.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-common</artifactId>
-      <version>2.4.0</version>
-    </dependency>
-
-
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <version>4.10</version>
       <scope>test</scope>
     </dependency>
- </dependencies>
- <build>
+    <dependency>
+      <groupId>org.javastack</groupId>
+      <artifactId>bouncer</artifactId>
+      <version>1.5.7</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.zookeeper</groupId>
+      <artifactId>zookeeper</artifactId>
+      <version>3.4.5</version>
+      <exclusions>
+        <exclusion>
+          <groupId>javax.jms</groupId>
+          <artifactId>jms</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.sun.jdmk</groupId>
+          <artifactId>jmxtools</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.sun.jmx</groupId>
+          <artifactId>jmxri</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+  </dependencies>
+  <build>
     <plugins>
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
@@ -71,7 +82,7 @@
                 <excludes>
                   <exclude>org.apache.hadoop:*</exclude>
                   <exclude>org.apache.pig:*</exclude>
-                  <exclude>org.apache.slider:*</exclude>
+                  <exclude>org.apache.zookeeper:*</exclude>
                 </excludes>
               </artifactSet>
             </configuration>
@@ -97,6 +108,5 @@
 
     </plugins>
   </build>
-
 
 </project>
